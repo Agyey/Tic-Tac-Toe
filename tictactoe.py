@@ -71,6 +71,7 @@ def easy_move(table):
             valid_move = True
     return x, y
 
+
 # Medium Mode (If win or block in one move then do it else random)
 def medium_move(table):
     # Top Left Corner
@@ -97,6 +98,44 @@ def medium_move(table):
     else:
         return easy_move(table)
 
+
+# Best Move Possible
+def best_move(table, ai):
+    moves = list()
+    player = 'X' if table.count('X') == table.count('O') else 'O'
+    if table.count(' ') == 0:
+        if winner(table) == ai:
+            return {'score': 10}
+        elif winner(table) == ' ':
+            return {'score': 0}
+        else:
+            return {'score': -10}
+    for position in range(len(table)):
+        # If position is not occupied
+        if table[position] not in ['X', 'O']:
+            # Set move position
+            move = dict()
+            move['position'] = position
+            # Set current position to Player's Mark
+            table[position] = player
+            # Call hard_move on the current position
+            move['score'] = best_move(table, ai)['score']
+            # Reset table
+            table[position] = ' '
+            moves.append(move)
+    if player == ai:
+        return max(moves, key=lambda x: x['score'])
+    else:
+        return max(moves, key=lambda x: -x['score'])
+
+
+# Hard Mode (Tries to Win Everytime)
+def hard_move(table):
+    ai = 'X' if table.count('X') == table.count('O') else 'O'
+    index = best_move(table, ai)['position']
+    return index % 3 + 1, 3 - index // 3
+
+
 # Initialisation
 starting_condition = "_________"
 x_moves = starting_condition.lower().count('x')
@@ -117,7 +156,12 @@ while command != 'exit':
         except:
             print('Bad parameters!')
             continue
-        if x_player not in ['user', 'easy', 'medium'] or o_player not in ['user', 'easy', 'medium']:
+        options = {
+            'user': next_move,
+            'easy': easy_move,
+            'medium': medium_move,
+            'hard': hard_move}
+        if x_player not in options or o_player not in options:
             print('Bad parameters!')
             continue
     else:
@@ -125,8 +169,8 @@ while command != 'exit':
         continue
     table = list(starting_condition.replace('_',' '))
     display_table(table)
-    first_move = next_move if x_player == 'user' else easy_move if x_player == 'easy' else medium_move
-    second_move = next_move if o_player == 'user' else easy_move if o_player == 'easy' else medium_move
+    first_move = options[x_player]
+    second_move = options[o_player]
     while moves and winner(table) == ' ':
         # X's Move
         curr = 'X'
